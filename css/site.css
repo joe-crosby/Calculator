@@ -1,19 +1,50 @@
-.calculator {
+@import url('https://fonts.googleapis.com/css2?family=Courgette&family=Licorice&family=Moon+Dance&display=swap');
+
+.calculator, .errors{
   margin: 0 auto;
-  width: 300px;
+  width: 350px;
+}
+
+.calculator {
   height: 500px;
   border: 1px solid #000000;
-  border-radius: 10px;
+  border-radius: 20px;
   background: #346509;
 }
 
-.display {
-  padding: 20px;
+.expression {
+  text-align: left;
 }
 
-#display{
-  margin: 0 auto;
-  height: 30px;
-  width: 98%;
-  border-radius: 5px;
+.result {
+  text-align: right;
+}
+
+.display {
+  overflow: auto;
+  overflow-x: hidden;
+  background: white;
+  padding: 8px;
+  margin: 15px auto;
+  height: 90px;
+  width: 90%;
+  border-radius: 10px;
+  text-align: right;
+  font-size: x-large;
+
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+}
+
+.display::-webkit-scrollbar { /* WebKit */
+  width: 0;
+  height: 0;
+}
+
+.display > *, .errors{
+  font-family: var(--font-family);
+}
+
+:root{
+  --font-family: 'Courgette', cursive; /*'Moon Dance', cursive;*/
 }

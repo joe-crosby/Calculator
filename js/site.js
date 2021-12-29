@@ -1,15 +1,16 @@
 const numberRegex = /(?<!\d)-?[\d\.]+/g;
-const addRegex = /(?<!\d)-?\d+[+]-?[\d\.]+/g;
-const subtractRegex = /(?<!\d)-?\d+[-]-?[\d\.]+/g;
-const multiplyRegex = /(?<!\d)-?\d+[*]-?[\d\.]+/g;
-const divideRegex = /(?<!\d)-?\d+[\/]-?[\d\.]+/g;
+const addRegex = /(?<!\d)-?[\d\.]+[\+]-?[\d\.]+/g;
+const subtractRegex = /(?<!\d)-?[\d\.]+[\-]-?[\d\.]+/g;
 const inParenthesisRegex = /\([^\)\(]+[\/*+\-\d]+\)/g;
 const singleValueInParenthesisRegex = /\([\-]{0,1}[\d\.]+\)/g;
 const impliedOpenOperator = /\d+\(/g;
 const impliedCloseOperator = /\)\d+/g;
 const separator = ": ";
 
-let expressionArray = [];
+const multiplyDivideRegex = /(?<!\d)-?[\d\.]+[\*\/]-?[\d\.]+/g;
+const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
+
+let displayIsCalculated = false;
 
 function operate(expression, operator){
   let numbers = expression.match(numberRegex);
@@ -32,8 +33,9 @@ function operate(expression, operator){
       break;
     case '/':
       return numbers.reduce((total, num) => {
-        if (Number(num) === 0)
-          return 'Invalid Opreation: Cannot divide by zero';
+        if (Number(num) === 0){
+          throw 'Invalid Operation: Cannot divide by zero';
+        }
 
          return total / Number(num);
       });
@@ -82,43 +84,26 @@ function calculate(expression){
 }
 
 function processOperations(expression){
-  let matches = expression.match(multiplyRegex);
+  let matches = expression.match(multiplyDivideRegex);
+  // Multiplication and division
   while (matches){
     matches.forEach(m => {
-      expression = expression.replace(m, operate(m, '*'));
+      expression = expression.replace(m, operate(m, m.includes('*') ? '*' : '/'));
       console.log(expression);
     });
-    matches = expression.match(multiplyRegex);
+    matches = expression.match(multiplyDivideRegex);
   }
-
-  matches = expression.match(divideRegex);
+  // Addition and subtraction
+  matches = expression.match(additionSubtractionRegex);
   while (matches){
     matches.forEach(m => {
-      expression = expression.replace(m, operate(m, '/'));
+      expression = expression.replace(m, operate(m, m.includes('+') ? '+' : '-'));
       console.log(expression);
     });
-    matches = expression.match(divideRegex);
+    matches = expression.match(additionSubtractionRegex);
   }
 
-  matches = expression.match(addRegex);
-  while (matches){
-    matches.forEach(m => {
-      expression = expression.replace(m, operate(m, '+'));
-      console.log(expression);
-    });
-    matches = expression.match(addRegex);
-  }
-
-  matches = expression.match(subtractRegex);
-  while (matches){
-    matches.forEach(m => {
-      expression = expression.replace(m, operate(m, '-'));
-      console.log(expression);
-    });
-    matches = expression.match(subtractRegex);
-  }
-
-  // Remove parenthesis with single values
+  // Remove parenthesis from around single values
   let singles = expression.match(singleValueInParenthesisRegex);
   if (singles){
     singles.forEach(item => {
@@ -129,6 +114,191 @@ function processOperations(expression){
 
   return expression;
 }
-
+/*
 //-18(-4*5-2)*4+16-8/-15(-18(3*5-2)*-4+16-8/-15)
 alert(calculate(prompt("Enter an expression for testing.")));
+*/
+
+function setError(val){
+  document.getElementById('errors').innerText = val;
+}
+
+function initialize(){
+  document.addEventListener('keydown', keyDown);
+}
+
+function getByClass(n){
+  let elements = document.getElementsByClassName(n);
+  return elements.length ? elements[0] : null;
+}
+
+function clearScreen(){
+  getByClass('display').innerHTML = null;
+}
+
+function addExpression(){
+  // get the display screen and add a new div
+  let display = getByClass('display');
+
+  let previousExpression = getByClass('currentExpression');
+  if (previousExpression)
+    previousExpression.classList.remove('currentExpression');
+
+  let currentExpression = document.createElement('p');
+  currentExpression.classList.add('expression', 'currentExpression');
+  display.appendChild(currentExpression);
+}
+
+function addResult(val){
+  // get the display screen and add a new div
+  let display = getByClass('display');
+
+  let previousResult = getByClass('currentResult');
+  if (previousResult)
+    previousResult.classList.remove('currentResult');
+
+  let currentResult = document.createElement('p');
+  currentResult.classList.add('result', 'currentResult');
+
+  display.appendChild(currentResult);
+
+  return currentResult;
+}
+
+function scrollToBottom(){
+  let e = getCurrentDisplayElement();
+  e.scrollIntoView(false);
+}
+
+function getCurrentExpression(){
+  let cde = getCurrentDisplayElement();
+  if (!cde || !cde.classList.contains('currentExpression')){
+    addExpression();
+  }
+
+  return getByClass('currentExpression');
+}
+
+function getCurrentDisplayElement(){
+  return getByClass('display').lastElementChild;
+}
+
+function calculateDisplay(exp){
+  try {
+    addResult().innerText = calculate(exp);
+    scrollToBottom();
+  } catch (e) {
+    setError(e);
+  }
+}
+
+function keyDown(e){
+  setError(null);
+
+  let display = getCurrentExpression();
+
+  // Calculate the expression in the display
+  if (e.key === 'Enter'){
+    // if not properly closed expression throw
+    let isValid = display.innerText.match(/[\d\)]+$/g);
+    if (isValid){
+      let cr = getByClass('currentResult');
+      let exp = !cr ? display.innerText : display.innerText.replace('ans', getByClass('currentResult').innerText);
+      calculateDisplay(exp);
+    }
+    else{
+      setError('The end of the expression is invalid.');
+    }
+    return;
+  }
+
+  // Clear the display
+  if (e.key === 'Escape'){
+    clearScreen();
+    return;
+  }
+
+  let validKeyRegex = /[\d\.\*\+\-\/\(\)]+/g;
+
+  let keyIsValid = e.key.match(validKeyRegex);
+  let isBackspace = e.key === 'Backspace' || e.key === 'Delete';
+
+  if(keyIsValid || isBackspace){
+    processKey(display, e.key, isBackspace);
+    e.preventDefault();
+  }
+
+  scrollToBottom();
+}
+
+function processKey(display, key, isBackspace){
+  if(isBackspace){
+    // Remove the previously entered character
+    if (display.innerText)
+      display.innerText = display.innerText.slice(0, -1);
+  }
+  else {
+    if (!validateKey(display, key))
+      return;
+
+    display.innerText += key;
+  }
+}
+
+function addPrefix(display, val){
+  display.innerText += val;
+}
+
+function validateKey(display, key){
+  let operatorRegex = /[\.\*\+\-\/]/g;
+  let lastInstanceContainsDotRegex = /[\/\*\-\+]*\d*\.+\d*$/g;
+  let lastChar = display.innerText.length >= 1 ? display.innerText.charAt(display.innerText.length - 1) : null;
+  let secondLastChar = display.innerText.length >= 2 ? display.innerText.charAt(display.innerText.length - 2) : null;
+  let lastCharIsOperator = lastChar ? lastChar.match(operatorRegex) : null;
+  let secondLastCharIsOperator = secondLastChar ? secondLastChar.match(operatorRegex) : null;
+  let keyIsOperator = key.match(operatorRegex);
+
+  // Do not allow empty parenthesis
+  if (lastChar === '(' && key === ')'){
+    return;
+  }
+
+  // Do not allow closing parenthesis after an operator character
+  if (lastCharIsOperator && key === ')'){
+    return;
+  }
+
+  // Do not allow multiple operator characters in a row
+  if (keyIsOperator && lastCharIsOperator && key !== '-') {
+    return;
+  }
+
+  // When a negative symbol is used for a number, do not allow more than 2 operators
+  if (keyIsOperator && secondLastCharIsOperator && lastCharIsOperator){
+    return;
+  }
+
+  // Do not allow operators after an open parenthesis, unless it is a negative number operator
+  if (keyIsOperator && lastChar === '(' && key !== '-' && key !== '('){
+    return;
+  }
+
+  // Allow operators before an open parenthesis
+  if (keyIsOperator && lastCharIsOperator && secondLastChar === '('){
+    return;
+  }
+
+  // Do not allow more than 1 decimal point per number
+  if (display.innerText.match(lastInstanceContainsDotRegex) && key === '.'){
+    return;
+  }
+
+  if (keyIsOperator && !display.innerText){
+    // add 'ans' prefix
+    addPrefix(display, 'ans');
+  }
+
+  return true;
+}
+
+initialize();
