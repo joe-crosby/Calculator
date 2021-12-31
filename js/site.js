@@ -6,11 +6,13 @@ const singleValueInParenthesisRegex = /\([\-]{0,1}[\d\.]+\)/g;
 const impliedOpenOperator = /\d+\(/g;
 const impliedCloseOperator = /\)\d+/g;
 const separator = ": ";
+const syntaxError = "Syntax Error";
 
 const multiplyDivideRegex = /(?<!\d)-?[\d\.]+[\*\/]-?[\d\.]+/g;
 const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
 
 let displayIsCalculated = false;
+let displayBeforeError = null;
 
 function operate(expression, operator){
   let numbers = expression.match(numberRegex);
@@ -76,7 +78,14 @@ function calculate(expression){
     });
   }
   else {
-    return processOperations(expression);
+    let inValidResultRegex = /[^\-\d\.e]+/g;
+
+    let result = processOperations(expression);
+
+    if (result.match(inValidResultRegex))
+      throw syntaxError;
+
+      return result;
   }
 
   // Recursive call
@@ -119,8 +128,20 @@ function processOperations(expression){
 alert(calculate(prompt("Enter an expression for testing.")));
 */
 
-function setError(val){
-  document.getElementById('errors').innerText = val;
+function setError(err){
+  let display = getByClass('display');
+
+  if (err){
+    let error = document.createElement('p');
+    error.classList.add('error');
+    error.innerText = err;
+    display.appendChild(error);
+  }
+  else {
+    let err = display.querySelector('.error:last-child');
+    if (err)
+      display.removeChild(err);
+  }
 }
 
 function initialize(){
@@ -171,7 +192,9 @@ function addResult(val){
 
 function scrollToBottom(){
   let e = getCurrentDisplayElement();
-  e.scrollIntoView(false);
+  if (e){
+    e.scrollIntoView(false);
+  }
 }
 
 function getCurrentExpression(){
@@ -189,7 +212,8 @@ function getCurrentDisplayElement(){
 
 function calculateDisplay(exp){
   try {
-    addResult().innerText = calculate(exp);
+    let result = calculate(exp);
+    addResult().innerText = result;
     scrollToBottom();
   } catch (e) {
     setError(e);
@@ -197,8 +221,13 @@ function calculateDisplay(exp){
 }
 
 function keyDown(e){
-  if(process(e.key))
-    e.preventDefault();
+  // testing press the correct button to process the action
+  let btn = document.getElementById(e.key);
+  if (!btn)
+    return;
+
+  // I was hoping this would trigger the active switch, but it doesn't.
+  btn.click();
 }
 
 function btnClicked(e){
@@ -207,42 +236,48 @@ function btnClicked(e){
 }
 
 function process(inputValue){
-  setError(null);
+  try{
+    setError(null);
 
-  let display = getCurrentExpression();
+    let display = getCurrentExpression();
 
-  // Calculate the expression in the display
-  if (inputValue === 'Enter'){
-    // if not properly closed expression throw
-    let isValid = display.innerText.match(/[\d\)]+$/g);
-    if (isValid){
-      let cr = getByClass('currentResult');
-      let exp = !cr ? display.innerText : display.innerText.replace('ans', getByClass('currentResult').innerText);
-      calculateDisplay(exp);
+    // Calculate the expression in the display
+    if (inputValue === 'Enter'){
+      if (display.innerText.length <= 0)
+        return;
+
+      // if not properly closed expression throw
+      let isValid = display.innerText.match(/[\d\)]+$/g);
+      if (isValid){
+        let cr = getByClass('currentResult');
+        let exp = !cr ? display.innerText : display.innerText.replace('ans', getByClass('currentResult').innerText);
+        calculateDisplay(exp);
+      }
+      else{
+        setError(syntaxError);
+      }
+      return;
     }
-    else{
-      setError('The end of the expression is invalid.');
+
+    // Clear the display
+    if (inputValue === 'Escape'){
+      clearScreen();
+      return;
     }
-    return;
+
+    let validKeyRegex = /[\d\.\*\+\-\/\(\)]+/g;
+
+    let keyIsValid = inputValue.match(validKeyRegex);
+    let isBackspace = inputValue === 'Backspace' || inputValue === 'Delete';
+
+    if(keyIsValid || isBackspace){
+      processKey(display, inputValue, isBackspace);
+      return true;
+    }
   }
-
-  // Clear the display
-  if (inputValue === 'Escape'){
-    clearScreen();
-    return;
+  finally {
+      scrollToBottom();
   }
-
-  let validKeyRegex = /[\d\.\*\+\-\/\(\)]+/g;
-
-  let keyIsValid = inputValue.match(validKeyRegex);
-  let isBackspace = inputValue === 'Backspace' || inputValue === 'Delete';
-
-  if(keyIsValid || isBackspace){
-    processKey(display, inputValue, isBackspace);
-    return true;
-  }
-
-  scrollToBottom();
 }
 
 function processKey(display, key, isBackspace){
@@ -271,6 +306,7 @@ function validateKey(display, key){
   let lastCharIsOperator = lastChar ? lastChar.match(operatorRegex) : null;
   let secondLastCharIsOperator = secondLastChar ? secondLastChar.match(operatorRegex) : null;
   let keyIsOperator = key.match(operatorRegex);
+  const hasCurrentResult = getByClass('currentResult');
 
   // Do not allow empty parenthesis
   if (lastChar === '(' && key === ')'){
@@ -282,8 +318,6 @@ function validateKey(display, key){
     return;
   }
 
-  // TODO :: put this in a function so we can prevent calculation when the opening and closing lengths are not equal.
-  
   // Do not allow closing parenthesis if parenthesis are not open
   let open = display.innerText.match(/\(/g);
   let close = display.innerText.match(/\)/g);
@@ -292,6 +326,17 @@ function validateKey(display, key){
   let isOpen = Number(openLen) > Number(closeLen);
 
   if (!isOpen && key === ')'){
+    return;
+  }
+
+  // Do not allow operator characters except the negative symbol as the first character
+  if (!hasCurrentResult && display.innerText == '-' && key == '-') {
+    return;
+  }
+
+
+  // Do not allow operator characters except the negative symbol as the first character
+  if (keyIsOperator && !hasCurrentResult&& display.innerText.length <= 0 && key !== '-') {
     return;
   }
 
@@ -320,7 +365,7 @@ function validateKey(display, key){
     return;
   }
 
-  if (keyIsOperator && !display.innerText){
+  if (hasCurrentResult && keyIsOperator && !display.innerText){
     // add 'ans' prefix
     addPrefix(display, 'ans');
   }

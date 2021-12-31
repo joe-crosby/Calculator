@@ -9,7 +9,7 @@
   height: 500px;
   border: 1px solid #000000;
   border-radius: 20px;
-  background: #346509;
+  background: #788fad;
 }
 
 .expression {
@@ -78,6 +78,18 @@
 input[type='button'], button {
   border-radius: 15px;
   height: 3em;
+  background: #bcdfd4;
+}
+
+input[type='button']:active, button:active {
+  background-color: #ffdfd4;
+  transform: translateY(3px);
+}
+
+.error {
+  color: darkred;
+  font-size: small;
+  text-align: center;
 }
 
 :root{
