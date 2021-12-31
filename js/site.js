@@ -125,6 +125,10 @@ function setError(val){
 
 function initialize(){
   document.addEventListener('keydown', keyDown);
+
+  for(const btn of document.querySelectorAll("input[type='button'], button")){
+    btn.addEventListener('click', btnClicked);
+  };
 }
 
 function getByClass(n){
@@ -193,12 +197,22 @@ function calculateDisplay(exp){
 }
 
 function keyDown(e){
+  if(process(e.key))
+    e.preventDefault();
+}
+
+function btnClicked(e){
+  if (e.currentTarget)
+    process(e.currentTarget.value);
+}
+
+function process(inputValue){
   setError(null);
 
   let display = getCurrentExpression();
 
   // Calculate the expression in the display
-  if (e.key === 'Enter'){
+  if (inputValue === 'Enter'){
     // if not properly closed expression throw
     let isValid = display.innerText.match(/[\d\)]+$/g);
     if (isValid){
@@ -213,19 +227,19 @@ function keyDown(e){
   }
 
   // Clear the display
-  if (e.key === 'Escape'){
+  if (inputValue === 'Escape'){
     clearScreen();
     return;
   }
 
   let validKeyRegex = /[\d\.\*\+\-\/\(\)]+/g;
 
-  let keyIsValid = e.key.match(validKeyRegex);
-  let isBackspace = e.key === 'Backspace' || e.key === 'Delete';
+  let keyIsValid = inputValue.match(validKeyRegex);
+  let isBackspace = inputValue === 'Backspace' || inputValue === 'Delete';
 
   if(keyIsValid || isBackspace){
-    processKey(display, e.key, isBackspace);
-    e.preventDefault();
+    processKey(display, inputValue, isBackspace);
+    return true;
   }
 
   scrollToBottom();
@@ -265,6 +279,19 @@ function validateKey(display, key){
 
   // Do not allow closing parenthesis after an operator character
   if (lastCharIsOperator && key === ')'){
+    return;
+  }
+
+  // TODO :: put this in a function so we can prevent calculation when the opening and closing lengths are not equal.
+  
+  // Do not allow closing parenthesis if parenthesis are not open
+  let open = display.innerText.match(/\(/g);
+  let close = display.innerText.match(/\)/g);
+  let openLen = open ? open.length : 0;
+  let closeLen = close ? close.length : 0;
+  let isOpen = Number(openLen) > Number(closeLen);
+
+  if (!isOpen && key === ')'){
     return;
   }
 

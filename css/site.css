@@ -45,6 +45,41 @@
   font-family: var(--font-family);
 }
 
+.keyboard {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  grid-template-columns: 80% 20%;
+}
+
+.keypad {
+  grid-row: 2;
+  display: grid;
+  margin: 10px 0px 10px 10px;
+  grid-gap: 5px;
+  direction: rtl;
+  /* rows / cols */
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: repeat(5, 1fr);
+}
+
+.right-options {
+  display: grid;
+  margin: 10px 10px 10px 5px;
+  grid-row-gap: 5px;
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.bottom-buttons {
+  grid-row: 3;
+  margin: 10px;
+}
+
+input[type='button'], button {
+  border-radius: 15px;
+  height: 3em;
+}
+
 :root{
   --font-family: 'Courgette', cursive; /*'Moon Dance', cursive;*/
 }
