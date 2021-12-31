@@ -77,11 +77,17 @@
 
 input[type='button'], button {
   border-radius: 15px;
+  outline: 0;
   height: 3em;
   background: #bcdfd4;
 }
 
 input[type='button']:active, button:active {
+  background-color: #ffdfd4;
+  transform: translateY(3px);
+}
+
+input[type='button'].transform, button.transform {
   background-color: #ffdfd4;
   transform: translateY(3px);
 }

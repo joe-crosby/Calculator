@@ -222,17 +222,27 @@ function calculateDisplay(exp){
 
 function keyDown(e){
   // testing press the correct button to process the action
-  let btn = document.getElementById(e.key);
+  let val = e.key == 'Backspace' ? 'Delete' : e.key;
+  let btn = document.getElementById(val);
   if (!btn)
     return;
 
-  // I was hoping this would trigger the active switch, but it doesn't.
+  document.activeElement = null;
+  transform(btn);
   btn.click();
 }
 
 function btnClicked(e){
   if (e.currentTarget)
     process(e.currentTarget.value);
+}
+
+function transform(e){
+  e.classList.add('transform');
+  let timer = setTimeout(function () {
+    e.classList.remove('transform');
+    clearTimeout(timer);
+  }, 200);
 }
 
 function process(inputValue){
