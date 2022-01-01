@@ -1,12 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Courgette&family=Licorice&family=Moon+Dance&display=swap');
 
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .calculator, .errors{
   margin: 0 auto;
   width: 350px;
 }
 
 .calculator {
-  height: 500px;
   border: 1px solid #000000;
   border-radius: 20px;
   background: #788fad;
@@ -20,14 +30,18 @@
   text-align: right;
 }
 
+.display-container {
+  display: grid;
+  width: 100%;
+}
+
 .display {
   overflow: auto;
   overflow-x: hidden;
   background: white;
   padding: 8px;
-  margin: 15px auto;
+  margin: 15px;
   height: 90px;
-  width: 90%;
   border-radius: 10px;
   text-align: right;
   font-size: x-large;
@@ -96,6 +110,13 @@ input[type='button'].transform, button.transform {
   color: darkred;
   font-size: small;
   text-align: center;
+}
+
+@media only screen and (max-width: 420px) {
+  .calculator {
+    width: 100%;
+    height: 99%;
+  }
 }
 
 :root{
