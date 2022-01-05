@@ -310,7 +310,7 @@ function addPrefix(display, val){
 
 function validateKey(display, key){
   let operatorRegex = /[\.\*\+\-\/]/g;
-  let lastInstanceContainsDotRegex = /[\/\*\-\+]*\d*\.+\d*$/g;
+  let lastInstanceContainsDotRegex = /\.+\d*$/g;
   let lastChar = display.innerText.length >= 1 ? display.innerText.charAt(display.innerText.length - 1) : null;
   let secondLastChar = display.innerText.length >= 2 ? display.innerText.charAt(display.innerText.length - 2) : null;
   let lastCharIsOperator = lastChar ? lastChar.match(operatorRegex) : null;
@@ -345,18 +345,18 @@ function validateKey(display, key){
   }
 
 
-  // Do not allow operator characters except the negative symbol as the first character
-  if (keyIsOperator && !hasCurrentResult&& display.innerText.length <= 0 && key !== '-') {
+  // Do not allow operator characters except the negative symbol or dot as the first character
+  if (keyIsOperator && !hasCurrentResult&& display.innerText.length <= 0 && (key !== '-' && key !== '.')) {
     return;
   }
 
   // Do not allow multiple operator characters in a row
-  if (keyIsOperator && lastCharIsOperator && key !== '-') {
+  if (keyIsOperator && lastCharIsOperator && (key !== '-' && key !== '.')) {
     return;
   }
 
   // When a negative symbol is used for a number, do not allow more than 2 operators
-  if (keyIsOperator && secondLastCharIsOperator && lastCharIsOperator){
+  if (keyIsOperator && key !== '.' && secondLastCharIsOperator && lastCharIsOperator){
     return;
   }
 
@@ -375,7 +375,7 @@ function validateKey(display, key){
     return;
   }
 
-  if (hasCurrentResult && keyIsOperator && !display.innerText){
+  if (hasCurrentResult && keyIsOperator && !display.innerText && key !== '.'){
     // add 'ans' prefix
     addPrefix(display, 'ans');
   }
