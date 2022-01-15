@@ -13,6 +13,7 @@ const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
 
 let displayIsCalculated = false;
 let displayBeforeError = null;
+let advancedFeaturesEnabled = false;
 
 function operate(expression, operator){
   let numbers = expression.match(numberRegex);
@@ -148,7 +149,12 @@ function initialize(){
   document.addEventListener('keydown', keyDown);
 
   for(const btn of document.querySelectorAll("input[type='button'], button")){
-    btn.addEventListener('click', btnClicked);
+    if (btn.classList.contains('option')){
+      btn.addEventListener('click', optionClicked);
+    }
+    else {
+      btn.addEventListener('click', btnClicked);
+    }
   };
 }
 
@@ -245,6 +251,10 @@ function transform(e){
   }, 200);
 }
 
+function getExpression(val){
+  return !getByClass('currentResult') ? val.innerText : val.innerText.replace('ans', getByClass('currentResult').innerText);
+}
+
 function process(inputValue){
   try{
     setError(null);
@@ -275,7 +285,17 @@ function process(inputValue){
       return;
     }
 
-    let validKeyRegex = /[\d\.\*\+\-\/\(\)]+/g;
+    let validSingleExpressionRegex = /[[^\/\*\-\+]\d*\.?\d+|ans][\/\*\-\+]+\d*\.?\d+$/g;
+
+    if (!advancedFeaturesEnabled && display.innerText.match(validSingleExpressionRegex) && inputValue.match(/[\/\*\-\+]/g)){
+      calculateDisplay(getExpression(display));
+
+      // add 'ans' prefix
+      addPrefix(getCurrentExpression(), 'ans' + inputValue);
+      return;
+    }
+
+    let validKeyRegex = advancedFeaturesEnabled ? /[\d\.\*\+\-\/\(\)]+/g : /[\d\.\*\+\-\/]+/g;
 
     let keyIsValid = inputValue.match(validKeyRegex);
     let isBackspace = inputValue === 'Backspace' || inputValue === 'Delete';
@@ -297,10 +317,10 @@ function processKey(display, key, isBackspace){
       display.innerText = display.innerText.slice(0, -1);
   }
   else {
-    if (!validateKey(display, key))
-      return;
-
-    display.innerText += key;
+    let newVal = display.innerText + key;
+    // if not a valid expression return instead;
+    let invalidExpressionRegex = /[\.\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}/g;
+    display.innerText += newVal.match(invalidExpressionRegex) ? '' : key;
   }
 }
 
@@ -308,79 +328,27 @@ function addPrefix(display, val){
   display.innerText += val;
 }
 
-function validateKey(display, key){
-  let operatorRegex = /[\.\*\+\-\/]/g;
-  let lastInstanceContainsDotRegex = /\.+\d*$/g;
-  let lastChar = display.innerText.length >= 1 ? display.innerText.charAt(display.innerText.length - 1) : null;
-  let secondLastChar = display.innerText.length >= 2 ? display.innerText.charAt(display.innerText.length - 2) : null;
-  let lastCharIsOperator = lastChar ? lastChar.match(operatorRegex) : null;
-  let secondLastCharIsOperator = secondLastChar ? secondLastChar.match(operatorRegex) : null;
-  let keyIsOperator = key.match(operatorRegex);
-  const hasCurrentResult = getByClass('currentResult');
+function optionClicked(e){
+  let element = e.currentTarget;
+  if (!element.classList.contains('active-option')){
+    let options = document.getElementsByClassName('active-option');
+    for (let o of options){
+      o.classList.remove('active-option');
+    }
 
-  // Do not allow empty parenthesis
-  if (lastChar === '(' && key === ')'){
-    return;
+    element.classList.add('active-option');
+
+    advancedFeaturesEnabled = element.id === 'advanced';
+    let advanced = document.getElementsByClassName('advanced-feature');
+    for (let a of advanced){
+      if (element.id === 'advanced'){
+        a.classList.remove('hidden');
+      }
+      else {
+        a.classList.add('hidden');
+      }
+    }
   }
-
-  // Do not allow closing parenthesis after an operator character
-  if (lastCharIsOperator && key === ')'){
-    return;
-  }
-
-  // Do not allow closing parenthesis if parenthesis are not open
-  let open = display.innerText.match(/\(/g);
-  let close = display.innerText.match(/\)/g);
-  let openLen = open ? open.length : 0;
-  let closeLen = close ? close.length : 0;
-  let isOpen = Number(openLen) > Number(closeLen);
-
-  if (!isOpen && key === ')'){
-    return;
-  }
-
-  // Do not allow operator characters except the negative symbol as the first character
-  if (!hasCurrentResult && display.innerText == '-' && key == '-') {
-    return;
-  }
-
-
-  // Do not allow operator characters except the negative symbol or dot as the first character
-  if (keyIsOperator && !hasCurrentResult&& display.innerText.length <= 0 && (key !== '-' && key !== '.')) {
-    return;
-  }
-
-  // Do not allow multiple operator characters in a row
-  if (keyIsOperator && lastCharIsOperator && (key !== '-' && key !== '.')) {
-    return;
-  }
-
-  // When a negative symbol is used for a number, do not allow more than 2 operators
-  if (keyIsOperator && key !== '.' && secondLastCharIsOperator && lastCharIsOperator){
-    return;
-  }
-
-  // Do not allow operators after an open parenthesis, unless it is a negative number operator
-  if (keyIsOperator && lastChar === '(' && key !== '-' && key !== '('){
-    return;
-  }
-
-  // Allow operators before an open parenthesis
-  if (keyIsOperator && lastCharIsOperator && secondLastChar === '('){
-    return;
-  }
-
-  // Do not allow more than 1 decimal point per number
-  if (display.innerText.match(lastInstanceContainsDotRegex) && key === '.'){
-    return;
-  }
-
-  if (hasCurrentResult && keyIsOperator && !display.innerText && key !== '.'){
-    // add 'ans' prefix
-    addPrefix(display, 'ans');
-  }
-
-  return true;
 }
 
 initialize();

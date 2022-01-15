@@ -28,9 +28,9 @@
           <input id='3' type="button" value='3'>
           <input id='2' type="button" value='2'>
           <input id='1' type="button" value='1'>
-          <button id=')' value=')'>(</button>
+          <button id=')' class="advanced-feature hidden" value=')'>(</button>
           <input id='0' type="button" value='0'>
-          <button id='(' value='('>)</button>
+          <button id='(' class="advanced-feature hidden" value='('>)</button>
           <button id='Delete' value='Delete'>Delete</button>
           <input id='.' type="button" value='.'>
           <button id='Escape' value='Escape'>Clear</button>
@@ -43,7 +43,8 @@
           <button id='Enter' value='Enter'>&#61;</button>
         </div>
         <div class="bottom-buttons">
-
+          <button class="option active-option" id='basic' title="Basic calculation" value='basic'>Basic</button>
+          <button class="option" id='advanced' title="Allow advanced expression calculation" value='advanced'>Advanced</button>
         </div>
       </div>
     </div>
