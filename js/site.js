@@ -1,18 +1,14 @@
 const numberRegex = /(?<!\d)-?[\d\.]+/g;
-const addRegex = /(?<!\d)-?[\d\.]+[\+]-?[\d\.]+/g;
-const subtractRegex = /(?<!\d)-?[\d\.]+[\-]-?[\d\.]+/g;
 const inParenthesisRegex = /\([^\)\(]+[\/*+\-\d]+\)/g;
 const singleValueInParenthesisRegex = /\([\-]{0,1}[\d\.]+\)/g;
 const impliedOpenOperator = /\d+\(/g;
 const impliedCloseOperator = /\)\d+/g;
-const separator = ": ";
+const operatorRegex = /[\/\*\-\+]/g;
 const syntaxError = "Syntax Error";
 
 const multiplyDivideRegex = /(?<!\d)-?[\d\.]+[\*\/]-?[\d\.]+/g;
 const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
 
-let displayIsCalculated = false;
-let displayBeforeError = null;
 let advancedFeaturesEnabled = false;
 
 function operate(expression, operator){
@@ -167,7 +163,7 @@ function clearScreen(){
   getByClass('display').innerHTML = null;
 }
 
-function addExpression(){
+function addExpressionElement(){
   // get the display screen and add a new div
   let display = getByClass('display');
 
@@ -180,7 +176,7 @@ function addExpression(){
   display.appendChild(currentExpression);
 }
 
-function addResult(val){
+function addResultElement(val){
   // get the display screen and add a new div
   let display = getByClass('display');
 
@@ -203,10 +199,10 @@ function scrollToBottom(){
   }
 }
 
-function getCurrentExpression(){
+function getCurrentExpressionElement(){
   let cde = getCurrentDisplayElement();
   if (!cde || !cde.classList.contains('currentExpression')){
-    addExpression();
+    addExpressionElement();
   }
 
   return getByClass('currentExpression');
@@ -219,7 +215,7 @@ function getCurrentDisplayElement(){
 function calculateDisplay(exp){
   try {
     let result = calculate(exp);
-    addResult().innerText = result;
+    addResultElement().innerText = result;
     scrollToBottom();
   } catch (e) {
     setError(e);
@@ -259,7 +255,8 @@ function process(inputValue){
   try{
     setError(null);
 
-    let display = getCurrentExpression();
+    let display = getCurrentExpressionElement();
+    let currentResult = getByClass('currentResult');
 
     // Calculate the expression in the display
     if (inputValue === 'Enter'){
@@ -269,9 +266,7 @@ function process(inputValue){
       // if not properly closed expression throw
       let isValid = display.innerText.match(/[\d\)]+$/g);
       if (isValid){
-        let cr = getByClass('currentResult');
-        let exp = !cr ? display.innerText : display.innerText.replace('ans', getByClass('currentResult').innerText);
-        calculateDisplay(exp);
+        calculateDisplay(getExpression(display));
       }
       else{
         setError(syntaxError);
@@ -291,7 +286,7 @@ function process(inputValue){
       calculateDisplay(getExpression(display));
 
       // add 'ans' prefix
-      addPrefix(getCurrentExpression(), 'ans' + inputValue);
+      appendDisplayValue(getCurrentExpressionElement(), 'ans' + inputValue);
       return;
     }
 
@@ -318,13 +313,20 @@ function processKey(display, key, isBackspace){
   }
   else {
     let newVal = display.innerText + key;
-    // if not a valid expression return instead;
-    let invalidExpressionRegex = /[\.\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}/g;
-    display.innerText += newVal.match(invalidExpressionRegex) ? '' : key;
+    // if not a valid expression do not add the character.
+    let invalidExpressionRegex = /[\.\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}|-[\/\*\+]/g;
+    if (newVal.match(invalidExpressionRegex))
+      return;
+
+    let addToExistingAnswer = display.innerText.length <= 0 && getByClass('currentResult');
+    if(addToExistingAnswer && key.match(operatorRegex))
+      key = 'ans' + key;
+
+    appendDisplayValue(display, key);
   }
 }
 
-function addPrefix(display, val){
+function appendDisplayValue(display, val){
   display.innerText += val;
 }
 
@@ -337,17 +339,12 @@ function optionClicked(e){
     }
 
     element.classList.add('active-option');
+  }
 
-    advancedFeaturesEnabled = element.id === 'advanced';
-    let advanced = document.getElementsByClassName('advanced-feature');
-    for (let a of advanced){
-      if (element.id === 'advanced'){
-        a.classList.remove('hidden');
-      }
-      else {
-        a.classList.add('hidden');
-      }
-    }
+  advancedFeaturesEnabled = element.id === 'advanced';
+  let advanced = document.getElementsByClassName('advanced-feature');
+  for (let a of advanced){
+    a.disabled = element.id !== 'advanced';
   }
 }
 

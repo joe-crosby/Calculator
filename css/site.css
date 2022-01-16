@@ -127,10 +127,6 @@ input[type='button'].transform, button.transform {
   text-align: center;
 }
 
-.hidden {
-  visibility: hidden;
-}
-
 @media only screen and (max-width: 420px) {
   .calculator {
     width: 100%;
