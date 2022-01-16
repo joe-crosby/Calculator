@@ -1,7 +1,7 @@
 This is a simple calculator that runs on HTML, CSS and JavaScript.
 
 There is a basic feature (default) and an advanced feature.
--The basic feature only allows a single operation at a time. The operation is calculated when operator key or the enter key is pressed.
+-The basic feature only allows a single operation at a time. The operation is calculated when the operator key or the enter key is pressed.
 
 -The advanced feature allows full expressions and grouping. (Grouping refers to the use of parenthesis to isolate an expression as it's own group.). All operations are calculated (in order of precedence) when the enter key is pressed.
 
