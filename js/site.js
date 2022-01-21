@@ -5,6 +5,7 @@ const impliedOpenOperator = /\d+\(/g;
 const impliedCloseOperator = /\)\d+/g;
 const operatorRegex = /[\/\*\-\+]/g;
 const syntaxError = "Syntax Error";
+let hasError = false;
 
 const multiplyDivideRegex = /(?<!\d)-?[\d\.]+[\*\/]-?[\d\.]+/g;
 const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
@@ -75,8 +76,9 @@ function calculate(expression){
     });
   }
   else {
-    let inValidResultRegex = /[^\-\d\.e]+/g;
+    let inValidResultRegex = /[^\-\d\.]+/g;
 
+    // TODO :: figure out exponent notation
     let result = processOperations(expression);
 
     if (result.match(inValidResultRegex))
@@ -133,11 +135,14 @@ function setError(err){
     error.classList.add('error');
     error.innerText = err;
     display.appendChild(error);
+    hasError = true;
   }
   else {
     let err = display.querySelector('.error:last-child');
-    if (err)
+    if (err){
       display.removeChild(err);
+      hasError = false;
+    }
   }
 }
 
@@ -161,6 +166,7 @@ function getByClass(n){
 
 function clearScreen(){
   getByClass('display').innerHTML = null;
+  hasError = false;
 }
 
 function addExpressionElement(){
@@ -253,7 +259,18 @@ function getExpression(val){
 
 function process(inputValue){
   try{
-    setError(null);
+    // Clear the display
+    if (inputValue === 'Escape'){
+      clearScreen();
+      return;
+    }
+
+    if (hasError){
+      if (inputValue === 'Escape' || inputValue === 'Delete' || inputValue === 'Backspace')
+        setError(null);
+
+      return;
+    }
 
     let display = getCurrentExpressionElement();
     let currentResult = getByClass('currentResult');
@@ -271,12 +288,6 @@ function process(inputValue){
       else{
         setError(syntaxError);
       }
-      return;
-    }
-
-    // Clear the display
-    if (inputValue === 'Escape'){
-      clearScreen();
       return;
     }
 
@@ -324,6 +335,8 @@ function processKey(display, key, isBackspace){
 
     appendDisplayValue(display, key);
   }
+
+  getCurrentDisplayElement().scrollLeft += 20;
 }
 
 function appendDisplayValue(display, val){
