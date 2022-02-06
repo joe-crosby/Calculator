@@ -165,6 +165,7 @@ function getByClass(n){
 }
 
 function clearScreen(){
+  console.log('clear screen');
   getByClass('display').innerHTML = null;
   hasError = false;
 }
@@ -235,14 +236,17 @@ function keyDown(e){
   if (!btn)
     return;
 
-  document.activeElement = null;
   transform(btn);
-  btn.click();
+
+  process(btn.value);
 }
 
 function btnClicked(e){
-  if (e.currentTarget)
+  // Check for pointerId > 0 because something fires the "Clear" button click event spontaneously when the enter key is pressed. A button click event should not fire unless a button is manually clicked. I could not figure out what is firing it.
+  if (e.currentTarget && e.pointerId > 0){
+    console.log('btnClicked: ' + e.currentTarget.value);
     process(e.currentTarget.value);
+  }
 }
 
 function transform(e){
@@ -250,7 +254,7 @@ function transform(e){
   let timer = setTimeout(function () {
     e.classList.remove('transform');
     clearTimeout(timer);
-  }, 200);
+  }, 230);
 }
 
 function getExpression(val){
@@ -291,7 +295,7 @@ function process(inputValue){
       return;
     }
 
-    let validSingleExpressionRegex = /[[^\/\*\-\+]\d*\.?\d+|ans][\/\*\-\+]+\d*\.?\d+$/g;
+    let validSingleExpressionRegex = /[\d*\.?\d+|ans][\/\*\-\+]+\d*\.?\d+$/g;
 
     if (!advancedFeaturesEnabled && display.innerText.match(validSingleExpressionRegex) && inputValue.match(/[\/\*\-\+]/g)){
       calculateDisplay(getExpression(display));
@@ -323,15 +327,15 @@ function processKey(display, key, isBackspace){
       display.innerText = display.innerText.slice(0, -1);
   }
   else {
-    let newVal = display.innerText + key;
-    // if not a valid expression do not add the character.
-    let invalidExpressionRegex = /[\.\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}|-[\/\*\+]/g;
-    if (newVal.match(invalidExpressionRegex))
-      return;
-
     let addToExistingAnswer = display.innerText.length <= 0 && getByClass('currentResult');
     if(addToExistingAnswer && key.match(operatorRegex))
       key = 'ans' + key;
+
+    let newVal = display.innerText + key;
+    // if not a valid expression do not add the character.
+    let invalidExpressionRegex = /[\.]{2,}|[\/]{2,}|[\*]{2,}|[\+]{2,}|[\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}|-[\/\*\+]|\.-|^[\/\*\+]|^[\-]{2,}/g;
+    if (newVal.match(invalidExpressionRegex))
+      return;
 
     appendDisplayValue(display, key);
   }
