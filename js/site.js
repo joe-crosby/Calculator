@@ -1,8 +1,8 @@
 const numberPattern = '((?<!\\d)-?(\\d*\\.\\d+|\\d+)(e\\+(\\d*\\.\\d+|\\d+)|e\\-(\\d*\\.\\d+|\\d+))?)'
 
 const numberRegex = new RegExp(numberPattern, 'gi');
-const inParenthesisRegex = /\([^\)\(]+[\/*+\-\d]+\)/g;
-const singleValueInParenthesisRegex = /\([\-]{0,1}[\d\.]+\)/g;
+const inParenthesisRegex = /\([^\)\(]+\)/g;
+const singleValueInParenthesisRegex = new RegExp('\\(' + numberPattern + '\\)', 'gi');
 const impliedOpenOperator = /\d+\(/g;
 const impliedCloseOperator = /\)\d+/g;
 const operatorRegex = /[\/\*\-\+]/g;
@@ -79,7 +79,6 @@ function calculate(expression){
   else {
     let inValidResultRegex = /[^\-\d\.e\+]+/g;
 
-    // TODO :: figure out exponent notation
     let result = processOperations(expression);
 
     if (result.match(inValidResultRegex))
