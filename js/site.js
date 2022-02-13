@@ -1,4 +1,6 @@
-const numberRegex = /(?<!\d)-?[\d\.]+/g;
+const numberPattern = '((?<!\\d)-?(\\d*\\.\\d+|\\d+)(e\\+(\\d*\\.\\d+|\\d+)|e\\-(\\d*\\.\\d+|\\d+))?)'
+
+const numberRegex = new RegExp(numberPattern, 'gi');
 const inParenthesisRegex = /\([^\)\(]+[\/*+\-\d]+\)/g;
 const singleValueInParenthesisRegex = /\([\-]{0,1}[\d\.]+\)/g;
 const impliedOpenOperator = /\d+\(/g;
@@ -7,8 +9,8 @@ const operatorRegex = /[\/\*\-\+]/g;
 const syntaxError = "Syntax Error";
 let hasError = false;
 
-const multiplyDivideRegex = /(?<!\d)-?[\d\.]+[\*\/]-?[\d\.]+/g;
-const additionSubtractionRegex = /(?<!\d)-?[\d\.]+[\+\-]-?[\d\.]+/g;
+const multiplyDivideRegex = new RegExp(numberPattern + '[\\/\\*]' + numberPattern, 'gi');
+const additionSubtractionRegex = new RegExp(numberPattern + '[\\+\\-]' + numberPattern, 'gi');
 
 let advancedFeaturesEnabled = false;
 
@@ -36,7 +38,6 @@ function operate(expression, operator){
         if (Number(num) === 0){
           throw 'Invalid Operation: Cannot divide by zero';
         }
-
          return total / Number(num);
       });
       break;
@@ -76,7 +77,7 @@ function calculate(expression){
     });
   }
   else {
-    let inValidResultRegex = /[^\-\d\.]+/g;
+    let inValidResultRegex = /[^\-\d\.e\+]+/g;
 
     // TODO :: figure out exponent notation
     let result = processOperations(expression);
