@@ -84,7 +84,9 @@ function calculate(expression){
     if (result.match(inValidResultRegex))
       throw syntaxError;
 
-      return result;
+    if (result.startsWith('--'))
+      result = result.substr(2);
+    return result;
   }
 
   // Recursive call
@@ -333,7 +335,7 @@ function processKey(display, key, isBackspace){
 
     let newVal = display.innerText + key;
     // if not a valid expression do not add the character.
-    let invalidExpressionRegex = /[\.]{2,}|[\/]{2,}|[\*]{2,}|[\+]{2,}|[\/\*\+]{2,}|\(\)|\d*\.\d+\.|[\/\*\-\+]\-{2,}|-[\/\*\+]|\.-|^[\/\*\+]|^[\-]{2,}/g;
+    let invalidExpressionRegex = /[\.]{2,}|[\/]{2,}|[\*]{2,}|[\+]{2,}|[\/\*\+]{2,}|\(\)|\)\(|\d*\.\d+\.|[\/\*\-\+]\-{2,}|-[\/\*\+]|\.-|^[\/\*\+]|^[\-]{2,}|[\(][\/\*\+]+/g;
     if (newVal.match(invalidExpressionRegex))
       return;
 
