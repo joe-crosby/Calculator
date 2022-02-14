@@ -238,9 +238,8 @@ function keyDown(e){
   if (!btn)
     return;
 
-  transform(btn);
-
   process(btn.value);
+  transform(btn);
 }
 
 function btnClicked(e){
